@@ -1,0 +1,131 @@
+<html>
+<head>
+  <title>Chat ejemplo por: Max Pawel</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+  <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  <style>
+    #chatPage{
+      display: none;
+    }
+
+    #chatContainer{
+      /*float: left;*/
+    }
+
+    #chatBody{
+      position: relative;
+      width: 100%;
+      height: 70%;
+      overflow: auto;
+      background-color: #f00;
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <div id="chatPage" style="height: 90%; width: 100%;">
+    <div class="col-md-1"></div>
+    <div class="row" style="width: 100%;">
+      <div id="chatContainer" class="col-md-7">
+        <div class="panel panel-primary">
+          <div id="chatHeader" class="panel-heading">CHAT</div>
+          <div id="chatBody" class="panel-body">fddfsdfsf</div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="panel panel-info">
+          <div id="usersHeader" class="panel-heading">USUARIOS CONECTADOS</div>
+          <div id="usersBody" class="panel-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2"></div>
+    <div class="row" style="height: 20%; width: 80%; text-align: center;">
+      <form id="sendMessage" class="input-group" style="text-align: center; margin: 0 auto;">
+        <input id="message" class="form-control input-lg" type="text" style="background-color: #00FFCC;">
+        <span class="input-group-btn">
+          <button class="btn btn-lg btn-success" type="submit">ENVIAR</button>
+        </span>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="loginContainer" class="input-group" style="width:350px; text-align:center; margin:0 auto;">
+  <input id="nickname" class="form-control input-lg" type="text" placeholder="introduce tu nickname" style="text-align:center;">
+  <span class="input-group-btn">
+    <button id="setNick" class="btn btn-lg btn-primary" type="button">ENTRAR</button>
+  </span>
+</div>
+
+<div id="loginError" class="alert fade in alert-danger alert-dismissable" data-dismiss="alert" style="display:none;">
+  <button id="closeAlert" type="button" class="close">x</button>
+  No puedes entrar al chat con ese nick. Por favor, prueba con otro.
+</div>
+
+<script>
+
+jQuery(function($){
+  var socketClient = io.connect();
+  var $messageForm = $('#sendMessage');
+  var $messageBox = $('#message');
+  var $chat = $('#chatBody');
+  var $buttonSend = $('#send');
+
+  var $nickForm = $('#setNick');
+  var $nickBox = $('#nickname');
+  var $users = $('#usersBody');
+  var $closeAlert = $('#closeAlert');
+
+  $nickForm.click(function(e){
+    e.preventDefault();
+    socketClient.emit('new user', $nickBox.val(), function(data){
+      if(data){
+        $('#loginContainer').hide();
+        $('#chatPage').show();
+        socketClient.emit('send message', ($nickBox.val() + 'Hola, he entrado al chat'));
+      }else{
+        $('#loginError').show();
+      }
+    });
+    $nickBox.val('');
+  });
+
+  $closeAlert.click(function(e){
+    $('#loginError').hide();
+  });
+
+  $messageForm.submit(function(e){
+    e.preventDefault();
+    if($messageBox.val()!='') socketClient.emit('send message', $messageBox.val());
+    $messageBox.val('');
+  });
+
+  socketClient.on('new message', function(data){
+    $chat.append('<b>'+data.nick+":</b> "+data.msg+"<br/>");
+  });
+
+  socketClient.on('usernames', function(data){
+    var html = '';
+    for(var username in data){
+      html+=username+"<br/>";
+    }
+    $users.html(html);
+  });
+});
+
+</script>
+</body>
+</html>
+
+
